@@ -1,45 +1,49 @@
-const { ApiPromise, WsProvider } = require("avail-js-sdk"); // Use Avail SDK
-require("dotenv").config(); // Load environment variables
+const { HttpProvider, ApiPromise } = require('avail-js-sdk');
+require('dotenv').config();
 
 async function fetchAccountDetails(address) {
-  // Connect to Avail Node
-  const wsProvider = new WsProvider(process.env.AVAIL_WS_ENDPOINT);
-const api = await ApiPromise.create({
-    provider: wsProvider,
-    chainId: 22023, // Turing Testnet Chain ID 
-});
+  const httpProvider = new HttpProvider(process.env.HTTP_ENDPOINT); 
+  const api = await ApiPromise.create({ provider: httpProvider });
 
+  try {
+    // Get Native Token Balance
+    const accountInfo = await api.query.system.account(address);
 
-  // 1. Get Native Token Balance (Available Balance)
-  const { data: { available: availableBalance } } = await api.query.system.account(address);
+    const nativeBalance = accountInfo.data?.free ?? '0';
+    const nonce = accountInfo.data?.nonce ?? '0';
+    const reserved = accountInfo.data?.reserved ?? '0';
+    const miscFrozen = accountInfo.data?.miscFrozen ?? '0';
+    const feeFrozen = accountInfo.data?.feeFrozen ?? '0';
 
-  // 2. List Fungible Token Assets and Balances (NOT CURRENTLY SUPPORTED)
-  // Avail is still under development and doesn't have a direct equivalent to Substrate's assets module. 
-  // You might need to interact with specific token contracts directly if they exist on Avail.
+    // Account Details
+    const accountDetails = { 
+      nonce: nonce.toString(), 
+      reserved: reserved.toString(), 
+      miscFrozen: miscFrozen.toString(), 
+      feeFrozen: feeFrozen.toString() 
+    };
 
-  // 3. List Non-Fungible Token Assets (NOT CURRENTLY SUPPORTED)
-  // Similar to fungible tokens, NFTs are not natively supported in the current Avail SDK. 
-  // You'll need to wait for future updates or interact with specific NFT contracts.
+    // Chain Information
+    const chainInfo = {
+      chainId: api.runtimeVersion?.specName?.toString() ?? 'unknown',
+      runtimeVersion: api.runtimeVersion?.specVersion?.toString() ?? 'unknown'
+    };
 
-  // 4. Get Account Details
-  const { nonce, data: { free: reserved, miscFrozen, feeFrozen } } = 
-        await api.query.system.account(address);
-  const accountDetails = { nonce, reserved, miscFrozen, feeFrozen };
-
-  // 5. Fetch Chain Information
-  const runtimeVersion = await api.rpc.state.getRuntimeVersion();
-  const chainInfo = {
-    chainId: api.runtimeChain.toString(),
-    runtimeVersion: runtimeVersion.specName.toString(),
-  };
-
-  // Output Results 
-  console.log("Available Balance:", availableBalance.toString()); 
-  console.log("Account Details:", accountDetails);
-  console.log("Chain Info:", chainInfo);
-
-  await api.disconnect(); // Clean up the connection
+    console.log("Native Balance:", nativeBalance.toString());
+    console.log("Account Details:", accountDetails);
+    console.log("Chain Info:", chainInfo);
+  } catch (error) {
+    if (error.name === 'ApiConnectionError') {
+      console.error(Failed to connect to Avail node: ${error.message});
+      // Consider adding retry logic here
+    } else {
+      console.error("Error fetching account details:", error);
+    }
+  } finally {
+    if (api) {
+      await api.disconnect();
+    } 
+  }
 }
 
-// Usage Example (replace with actual address from your .env file)
 fetchAccountDetails(process.env.WALLET_ADDRESS);
