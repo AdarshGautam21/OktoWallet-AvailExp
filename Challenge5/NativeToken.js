@@ -35,7 +35,7 @@ async function transferNativeToken(sender, recipient, amount) {
     const senderPair = keyring.createFromUri(process.env.SENDER_PRIVATE_KEY);
 
     // Create and send a transfer
-    const tx = await api.tx.balances.transfer(recipient, amount).paymentInfo(sender);
+    const tx = await api.tx.balances.transferKeepAlive(recipient, amount).paymentInfo(sender);
     const hash = await tx.signAndSend(senderPair);
 
     console.log("Transfer hash:", hash.toString());

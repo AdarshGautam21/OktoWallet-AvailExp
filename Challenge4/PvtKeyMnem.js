@@ -4,7 +4,7 @@ const hdkey = require('hdkey');
 const ethUtil = require('ethereumjs-util');
 
 // Private key (hex)
-const privateKey = "87b6d43213546895bbf946584199fa15751907381300df670a078fa4d8ff4ed6";
+const privateKey = "0x0fa7c50c3d4dc6b899a3801ea5bc4a09b46857c87fe048bde451c7b88d49af60";
 
 // Mnemonic (optional)
 const mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";

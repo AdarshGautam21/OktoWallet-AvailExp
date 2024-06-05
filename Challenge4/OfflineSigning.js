@@ -1,51 +1,43 @@
-const ethUtil = require('ethereumjs-util');
-const ethTx = require('ethereumjs-tx');
-const Avail = require('avail-js-sdk');
+require('dotenv').config(); // Load .env variables
+const { ethers } = require("ethers");
 
-// Create Avail instance
-const avail = new Avail({
-  provider: 'http://localhost:8545',
-  networkId: 12345, // Replace with your network ID
-});
+// URL for Avail Turing (read from .env file)
+const providerUrl = process.env.HTTP_ENDPOINT; 
 
-// Set up transaction parameters
-const fromAddress = '0x1234567890123456789012345678901234567890';
-const toAddress = '0xabcdefghijklmnopqrstuvwxyz0123456';
-const value = ethUtil.toBuffer('1000000000000000000'); // 1 AVL
-const gasLimit = ethUtil.toBuffer('21000');
-const gasPrice = ethUtil.toBuffer('10000000000');
-const nonce = ethUtil.toBuffer('0');
+// Addresses for the transaction (replace with your actual addresses)
+const fromAddress = process.env.YOUR_FROM_ADDRESS;
+const toAddress = process.env.YOUR_TO_ADDRESS;
+const value = ethers.utils.parseEther('0.7'); // Amount in AVL
 
-// Create transaction object
-const tx = new ethTx({
-  nonce,
-  gasLimit,
-  gasPrice,
-  to: toAddress,
-  value,
-  data: '0x',
-});
+async function createAndSendTransaction() {
+    try {
+        // Create provider with correct chain ID and error handling
+        const provider = new ethers.providers.JsonRpcProvider(providerUrl, 2197);
+        const network = await provider.getNetwork();
+        console.log("Connected to network:", network.name, network.chainId);
 
-// Sign transaction offline
-const privateKey = Buffer.from('87b6d43213546895bbf946584199fa15751907381300df670a078fa4d8ff4ed6', 'hex');
-tx.sign(privateKey);
+        const nonce = await provider.getTransactionCount(fromAddress);
+        const gasPrice = await provider.getGasPrice();
 
-// Serialize transaction
-const serializedTx = tx.serialize();
+        const txParams = {
+            nonce,
+            gasPrice,
+            gasLimit: 21000,
+            to: toAddress,
+            value,
+            data: '0x', 
+        };
 
-// Submit transaction on-chain
-avail.sendSignedTransaction(serializedTx)
-  .then((txHash) => {
-    console.log(`Transaction hash: ${txHash}`);
-  })
-  .catch((error) => {
-    console.error(error);
-  });
+        // Get private key from environment variable
+        const privateKey = process.env.PVT_KEY;
+        const wallet = new ethers.Wallet(privateKey, provider);
+        const signedTx = await wallet.signTransaction(txParams);
+        const txHash = await provider.sendTransaction(signedTx);
 
-//   This script first creates an instance of the Avail SDK and sets up the transaction parameters, including the fromAddress, toAddress, value, gasLimit, gasPrice, and nonce. It then creates a transaction object using the ethereumjs-tx library, signs it offline using the private key, serializes it, and submits it on-chain using the sendSignedTransaction method of the Avail SDK.
+        console.log('Transaction hash:', txHash);
+    } catch (error) {
+        console.error("Error:", error.code, error.reason, error.event); 
+    }
+}
 
-// Note that this script uses the ethereumjs-util and ethereumjs-tx libraries for creating and signing the transaction, and the avail-sdk library for submitting it on-chain. You may need to install these libraries using npm before running the script.
-
-// Also note that the networkId parameter in the Avail constructor should be replaced with your network ID. If you're using a local testnet, you can set it to any value, but if you're using a public network, you should use the appropriate network ID.
-
-// Finally, note that this script assumes that the private key is stored securely and is not visible to other functions or users. You should never share your private key or store it in an insecure location.
+createAndSendTransaction();
