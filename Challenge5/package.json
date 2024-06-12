@@ -3,14 +3,29 @@
   "version": "1.0.0",
   "description": "On Avail, accounts are initialized automatically once they receive their first transaction. This can be either:",
   "main": "NativeToken.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "rimraf build",
+    "start": "ts-node BalanceTransfer.ts",
+    "transfer": "npm run build",
+    "transfer-mortal-period": "npm run build",
+    "staking-nominate": "npm run build",
+    "staking-validate": "npm run build",
+    "estimate-transaction-fees": "npm run build"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@polkadot/api": "^11.2.1",
     "@polkadot/keyring": "^12.6.2",
-    "dotenv": "^16.4.5"
+    "@polkadot/types": "^11.2.1",
+    "avail-js-sdk": "^0.2.12",
+    "dotenv": "^16.4.5",
+    "typescript": "^5.4.5"
+  },
+  "devDependencies": {
+    "rimraf": "^5.0.5",
+    "ts-node": "^10.9.2"
   }
 }

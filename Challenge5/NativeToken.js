@@ -1,7 +1,7 @@
 // const { HttpProvider, ApiPromise, Keyring } = require('avail-js-sdk');
 const { Keyring } = require('@polkadot/keyring');
 const { ApiPromise, HttpProvider } = require('@polkadot/api');
-
+const Avail = require('avail-js-sdk');
 require('dotenv').config();
 
 async function fetchBalance(address) {
